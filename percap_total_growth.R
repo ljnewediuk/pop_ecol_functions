@@ -1,3 +1,4 @@
+library(tidyverse)
 
 # Function to estimate total growth over time
 total_growth <- function(N0, t, B, I, D, E) {
@@ -37,7 +38,7 @@ percap_growth <- function(N0, t, B, I, D, E) {
 # Set parameters
 
 N0 <- 100 # Initial population size
-t <- 15 # Time
+t <- 1000 # Time
 B <- 20 # Number of births
 D <- 10 # Number of deaths
 I <- 10 # Number of immigrants
