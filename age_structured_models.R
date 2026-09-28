@@ -45,7 +45,7 @@ Times <- 10
 
 asm_table <- tibble(
   Time = rep(1:Times, each = nrow(lt)),
-  Age = rep(1:nrow(lt), Times), 
+  Age = factor(rep(1:nrow(lt), Times)), 
   Nta = lapply(1:Times, 
               function(x) asm(life_table = lt, 
                               size_vec = c(Nt1, Nt2, Nt3), 
