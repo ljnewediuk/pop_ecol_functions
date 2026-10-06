@@ -1,6 +1,9 @@
-
 library(tidyverse)
 
+# 1 - Function to estimate population growth over time ----
+
+# life_table = A life table (minimum required columns Age, Sa, and Fa)
+# size_vec = vector of population sizes (must be same length as nrow(life_table))
 asm <- function(life_table, size_vec, times) {
   
   iteration <- 0
@@ -24,43 +27,55 @@ asm <- function(life_table, size_vec, times) {
     
     if(iteration == times) break
     
-    }
+  }
   
   return(size_vec)
   
 }
 
-lt<- tibble(Age = c(1, 2, 3), 
-            Sa = c(0.5, 0.5, 0),
-            la = c(1, 0.5, 0.25),
-            Fa = c(0, .25, 4))
+# Life table for VI marmots
+lt_marmots <- tibble(Age = 1:10,
+                     Sa = c(1, 0.5, rep(0.8, times = 7), 0),
+                     Fa = c(rep(0, times = 3), 0.1, rep(2, times = 6)))
 
-Nt1 <- 20
-Nt2 <- 14
-Nt3 <- 9
+# Pop size vector for VI marmots
+pop_size_marmots <- c(0, 20, rep(0, times = 8))
 
-# Adjust 10-100 to show development of stable age structure/long-term growth rate
-Times <- 80
+# Adjust 10-30 to show development of stable age structure/long-term growth rate
+Times <- 30
 
 asm_table <- tibble(
-  Time = rep(1:Times, each = nrow(lt)),
-  Age = factor(rep(1:nrow(lt), Times)), 
+  Time = rep(1:Times, each = nrow(lt_marmots)),
+  Age = factor(rep(1:nrow(lt_marmots), Times)), 
   Nta = lapply(1:Times, 
-              function(x) asm(life_table = lt, 
-                              size_vec = c(Nt1, Nt2, Nt3), 
+              function(x) asm(life_table = lt_marmots, 
+                              size_vec = pop_size_marmots, 
                               times = x)) %>% 
     unlist())
 
+# Plot all ages over time
 ggplot(asm_table, aes(x = Time, y = Nta, group = Age)) +
   geom_line(aes(colour = Age))
 
+# Estimate growth rates by time
 Nt_totals <- asm_table %>% 
   group_by(Time) %>%
   summarize(Nt = sum(Nta)) %>%
   mutate(lambda_est = Nt / lag(Nt))
 
-# Function to simulate
+# 2 - Function to simulate age structure over time ----
 
+# Simple life table
+lt<- tibble(Age = c(1, 2, 3), 
+            Sa = c(0.5, 0.5, 0),
+            la = c(1, 0.5, 0.25),
+            Fa = c(0, .25, 4))
+
+# lt = life table (must have columns Age, Sa, Fa)
+# Nts = length of population size vector (must be same as nrow(life table))
+# reps = number of repeats of simulation
+# t = number of time points
+# Nt_out = return population sizes or growth rates?
 sim_asm <- function(lt, Nts, reps, t, Nt_out = TRUE) {
   
   it <- 0
@@ -101,10 +116,12 @@ sim_asm <- function(lt, Nts, reps, t, Nt_out = TRUE) {
   }
 }
 
+# Plot population sizes
 sim_asm(lt = lt, Nts = 3, reps = 5, t = 100) %>%
 ggplot(aes(x = Time, y = Nta)) +
   geom_line(aes(colour = Age, group = interaction(iteration, Age)))
 
+# Plot growth rates
 sim_asm(lt = lt, Nts = 3, reps = 10, t = 80, Nt_out = FALSE) %>%
   ggplot(aes(x = Time, y = lambda_est)) +
   geom_line(aes(group = iteration))
