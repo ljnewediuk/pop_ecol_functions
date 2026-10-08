@@ -35,14 +35,18 @@ asm <- function(life_table, size_vec, times) {
 
 # Life table for VI marmots
 lt_marmots <- tibble(Age = 1:10,
-                     Sa = c(1, 0.5, rep(0.8, times = 7), 0),
-                     Fa = c(rep(0, times = 3), 0.1, rep(2, times = 6)))
+                     Sa = c(0.5, rep(0.8, times = 8), 0),
+                     Fa = c(rep(0, times = 3), 0.1, rep(2, times = 6))) %>%
+  mutate(La = lag(cumprod(Sa), n = 1))
+# Make the first La == 1
+lt_marmots[1,]$La = 1
+
 
 # Pop size vector for VI marmots
 pop_size_marmots <- c(0, 20, rep(0, times = 8))
 
 # Adjust 10-30 to show development of stable age structure/long-term growth rate
-Times <- 30
+Times <- 10
 
 asm_table <- tibble(
   Time = rep(1:Times, each = nrow(lt_marmots)),
@@ -124,5 +128,22 @@ ggplot(aes(x = Time, y = Nta)) +
 # Plot growth rates
 sim_asm(lt = lt, Nts = 3, reps = 10, t = 80, Nt_out = FALSE) %>%
   ggplot(aes(x = Time, y = lambda_est)) +
-  geom_line(aes(group = iteration))
+  geom_line(aes(group = factor(iteration), colour = factor(iteration))) +
+  ylab("Lambda")
+
+# The long-term growth rate and stable age structure will change if we adjust
+# the Leslie matrix, as the eigenvalue and eigenvector are properties of the
+# matrix.
+
+# Modify the life table (increase fecundity of age class 2 from 0.25 to 3)
+lt<- tibble(Age = c(1, 2, 3), 
+            Sa = c(0.5, 0.5, 0),
+            la = c(1, 0.5, 0.25),
+            Fa = c(0, 3, 4))
+
+# Plot growth rates
+sim_asm(lt = lt, Nts = 3, reps = 10, t = 15, Nt_out = FALSE) %>%
+  ggplot(aes(x = Time, y = lambda_est)) +
+  geom_line(aes(group = factor(iteration), colour = factor(iteration))) +
+  ylab("Lambda")
 
