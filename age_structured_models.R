@@ -121,7 +121,7 @@ sim_asm <- function(lt, Nts, reps, t, Nt_out = TRUE) {
 }
 
 # Plot population sizes
-sim_asm(lt = lt, Nts = 3, reps = 5, t = 100) %>%
+sim_asm(lt = lt, Nts = 3, reps = 10, t = 80) %>%
 ggplot(aes(x = Time, y = Nta)) +
   geom_line(aes(colour = Age, group = interaction(iteration, Age)))
 
