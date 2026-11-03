@@ -62,4 +62,5 @@ tibble(replacement = log_disc_growth(N0 = N0, t = t, K = K, rd = rd)[-t+1],
        Nt = log_disc_growth(N0 = N0, t = t, K = K, rd = rd)[-t+1],
        Nt_plus1 = log_disc_growth(N0 = N0, t = t, K = K, rd = rd)[-1]) %>%
   ggplot(aes(x = Nt, y = Nt_plus1)) +
-  geom_smooth(se = F, colour = "black", lineend = "round", linewidth = 1.5)
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +
+  geom_smooth(se = F, colour = "black")
