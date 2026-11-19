@@ -67,6 +67,12 @@ predpreyLV <- function(t, y, params) {
   })
 }
 
+# Re-define rates
+b <- 0.8
+a <- 0.05 
+e <- 0.4 
+d <- 0.2
+
 # Make a vector of the Lotka-Volterra parameters
 parmsLV <- c(b = b, a = a, d = d, e = e)
 
@@ -86,6 +92,12 @@ ggplot(LV_out) +
 w <- 5
 D <- 20
 alpha <- 0.1
+
+# Re-define rates
+b <- 0.8
+a <- 0.05 
+e <- 0.4 
+d <- 0.2
 
 # Define an ODE function for the Rosenzweig-MacArthur model
 predpreyRM <- function(t, y, params) { 
