@@ -1,6 +1,8 @@
 
 library(tidyverse)
 
+# 1 - Geometric mean vs. arithmetic mean
+
 # Function to estimate growth over time with an alternating high/low growth rate
 stoch_growth <- function(N0, t, growth_high, growth_low) {
   
@@ -29,20 +31,95 @@ stoch_growth <- function(N0, t, growth_high, growth_low) {
 # Create three population tables with different alternating growth rates
 # lambda = 0.95, 1.05
 Nt1 <- stoch_growth(N0 = 20, t = 150, growth_high = 1.05, growth_low = 0.95) %>%
-  mutate(lambda = "0.95, 1.05")
+  mutate(lambda = "0.95, 1.05",
+         mean_lambda = mean(c(0.95, 1.05))*20)
 # lambda = 0.90, 1.10
 Nt2 <- stoch_growth(N0 = 20, t = 150, growth_high = 1.10, growth_low = 0.90) %>%
-  mutate(lambda = "0.90, 1.10")
+  mutate(lambda = "0.90, 1.10",
+         mean_lambda = mean(c(0.90, 1.10))*20)
 # lambda = 0.85, 1.15
 Nt3 <- stoch_growth(N0 = 20, t = 150, growth_high = 1.15, growth_low = 0.85) %>%
-  mutate(lambda = "0.85, 1.15")
+  mutate(lambda = "0.85, 1.15",
+         mean_lambda = mean(c(0.85, 1.15))*20)
 
 # Plot the population trajectories
 bind_rows(Nt1, Nt2, Nt3) %>%
 ggplot(aes(x = Time, y = N, colour = lambda)) +
-  geom_hline(yintercept = 20) +
+  geom_hline(yintercept = 20, linetype = "dashed") +
+  geom_line(aes(y = mean_lambda)) +
   geom_line(alpha = 0.3) +
   geom_smooth(se = F) + 
   ylim(0, 40)
+
+# 2 - Monte Carlo simulations
+
+# Function to simulate population trajectories
+
+sim_pop_mc <- function(N0, mu, sigma, tmax, qextinct, times) {
+  
+  # Set initial iteration
+  iteration <- 1
+  
+  repeat {
+    
+    # Break the loop if we hit the maximum number of iterations
+    if(iteration > times) break
+    
+    # Create a vector for years 0 to max time
+    years <- 0:tmax
+    
+    # Create an empty numeric vector to hold the Nts
+    Nti <- numeric(length = length(years))
+    
+    # Randomly draw an rmax from the probability distribution
+    rt <- rnorm(n = length(years), mean = mu, sd = sigma)
+    
+    # Set the initial population size to N0
+    Nti[1] <- N0
+    
+    # Simulate forward in time using the random rts
+    for(i in 2:length(years)) Nti[i] <- exp(rt[i-1]) * Nti[i-1]
+    
+    # Create a table for the simulation
+    Nti_sim <- tibble(Year = years, Nt = Nti, Simulation = iteration) %>%
+      # Add column to specify whether the population exceeded the extinction threshold
+      mutate(Extinct = ifelse(any(Nt < qextinct), "yes", "no"))
+    
+    # Bind the simulations together, starting with just Nti if initial iteration
+    if(iteration == 1) Nt_sim <- Nti_sim
+    if(iteration > 1) Nt_sim <- bind_rows(Nt_sim, Nti_sim)
+    
+    iteration <- iteration + 1
+    
+  }
+  
+  return(Nt_sim)
+  
+}
+
+# Set the extinction threshold
+extinct <- 40
+
+# Set parameters of simulation and run
+sim_pops <- sim_pop_mc(mu = 0.01, sigma = 0.08, 
+                       N0 = 73, tmax = 100, qextinct = extinct, times = 20)
+
+sim_pops_mean <- sim_pops %>%
+  group_by(Year) %>%
+  summarize(Mean_Nt = mean(Nt),
+            Lower_Nt = mean(Nt) - (sd(Nt)/sqrt(length(Nt)))*1.96,
+            Upper_Nt = mean(Nt) + (sd(Nt)/sqrt(length(Nt)))*1.96)
+
+# Plot the simulations
+ggplot() +
+  geom_hline(yintercept = extinct, linetype = "dashed") +
+  geom_line(data = sim_pops, linewidth = 0.5,
+            aes(x = Year, y = Nt, group = Simulation, colour = Extinct)) +
+  geom_ribbon(data = sim_pops_mean, fill = "grey", alpha = 0.5,
+              aes(x = Year, ymin = Lower_Nt, ymax = Upper_Nt)) +
+  geom_line(data = sim_pops_mean, colour = "black", linewidth = 1.25,
+            aes(x = Year, y = Mean_Nt)) +
+  scale_colour_manual(values = c("lightblue", "darkred")) +
+  labs(y = "Population size", x = "Time")
 
 
