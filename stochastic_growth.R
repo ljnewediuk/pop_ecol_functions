@@ -102,8 +102,13 @@ extinct <- 40
 
 # Set parameters of simulation and run
 sim_pops <- sim_pop_mc(mu = 0.01, sigma = 0.08, 
-                       N0 = 73, tmax = 100, qextinct = extinct, times = 20)
+                       N0 = 73, tmax = 100, qextinct = extinct, times = 1000)
 
+# Subset 20 simulations for plotting
+sim_pops_subset <- sim_pops %>%
+  filter(Simulation <= 20)
+
+# Calculate the mean and confidence interval of the simulations
 sim_pops_mean <- sim_pops %>%
   group_by(Year) %>%
   summarize(Mean_Nt = mean(Nt),
@@ -113,7 +118,7 @@ sim_pops_mean <- sim_pops %>%
 # Plot the simulations
 ggplot() +
   geom_hline(yintercept = extinct, linetype = "dashed") +
-  geom_line(data = sim_pops, linewidth = 0.5,
+  geom_line(data = sim_pops_subset, linewidth = 0.5,
             aes(x = Year, y = Nt, group = Simulation, colour = Extinct)) +
   geom_ribbon(data = sim_pops_mean, fill = "grey", alpha = 0.5,
               aes(x = Year, ymin = Lower_Nt, ymax = Upper_Nt)) +
@@ -122,4 +127,7 @@ ggplot() +
   scale_colour_manual(values = c("lightblue", "darkred")) +
   labs(y = "Population size", x = "Time")
 
-
+# Calculate the proportion of times the population drops below the threshold
+cat("There is a ", 
+    sum(sim_pops$Extinct == "yes")/nrow(sim_pops)*100, 
+    "% chance the population will be extinct within 100 years.")
