@@ -97,11 +97,29 @@ sim_pop_mc <- function(N0, mu, sigma, tmax, qextinct, times) {
   
 }
 
+# Set the parameters for the polar bear population 
+# Population sizes from 1999 to 2006
+N <- c(702, 821, 739, 828, 729, 874, 804, 716)
+
+# Calculate annual lambda values
+lambda <- N[-1] / N[-length(N)]
+
+# Calculate annual log growth rates
+rt <- log(lambda)
+
+# Calculate sample mean and standard deviation
+mu_rt <- mean(rt)
+sd_rt <- sd(rt)
+
+# Calculate the confidence intervals
+mu_rt + (sd_rt / sqrt(length(n)))*1.96
+mu_rt - (sd_rt / sqrt(length(n)))*1.96
+
 # Set the extinction threshold
-extinct <- 400
+extinct <- 200
 
 # Set parameters of simulation and run
-sim_pops <- sim_pop_mc(mu = 0.05, sigma = 0.17, 
+sim_pops <- sim_pop_mc(mu = mu_rt, sigma = sd_rt, 
                        N0 = 702, tmax = 50, qextinct = extinct, times = 1000)
 
 # Subset 30 simulations for plotting
@@ -131,4 +149,10 @@ ggplot() +
 cat("There is a ", 
     sum(sim_pops$Extinct == "yes")/nrow(sim_pops)*100, 
     "% chance the population will be extinct within 50 years.")
+
+# 3 - The analytical probability of extinction
+
+cat("There is a ",
+    round((extinct / N[1])^(2 * mu_rt / sd_rt^2), 3)*100,
+    "% chance that the population will be extinct at some point.")
 
