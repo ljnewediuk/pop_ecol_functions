@@ -98,15 +98,15 @@ sim_pop_mc <- function(N0, mu, sigma, tmax, qextinct, times) {
 }
 
 # Set the extinction threshold
-extinct <- 40
+extinct <- 400
 
 # Set parameters of simulation and run
-sim_pops <- sim_pop_mc(mu = 0.01, sigma = 0.08, 
-                       N0 = 73, tmax = 100, qextinct = extinct, times = 1000)
+sim_pops <- sim_pop_mc(mu = 0.05, sigma = 0.17, 
+                       N0 = 702, tmax = 50, qextinct = extinct, times = 1000)
 
-# Subset 20 simulations for plotting
+# Subset 30 simulations for plotting
 sim_pops_subset <- sim_pops %>%
-  filter(Simulation <= 20)
+  filter(Simulation <= 30)
 
 # Calculate the mean and confidence interval of the simulations
 sim_pops_mean <- sim_pops %>%
@@ -130,4 +130,5 @@ ggplot() +
 # Calculate the proportion of times the population drops below the threshold
 cat("There is a ", 
     sum(sim_pops$Extinct == "yes")/nrow(sim_pops)*100, 
-    "% chance the population will be extinct within 100 years.")
+    "% chance the population will be extinct within 50 years.")
+
